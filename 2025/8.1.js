@@ -1,3 +1,5 @@
+import { UF } from "../utils/uf.js";
+
 let data = `162,817,812
 57,618,57
 906,360,560
@@ -27,8 +29,8 @@ function getDist(p1, p2) {
   return Math.floor(
     Math.sqrt(
       Math.pow(p1[0] - p2[0], 2) +
-        Math.pow(p1[1] - p2[1], 2) +
-        Math.pow(p1[2] - p2[2], 2),
+      Math.pow(p1[1] - p2[1], 2) +
+      Math.pow(p1[2] - p2[2], 2),
     ),
   );
 }
@@ -51,42 +53,16 @@ for (let i = 0; i < data.length; i++) {
 }
 
 let sortedByDist = dists.toSorted((a, b) => a[1] - b[1]);
-let clusters = {};
-let clusterId = 0;
+let uf = new UF();
 
 for (let i = 0; i < connections; i++) {
-  let [f, d, t] = sortedByDist[i];
-  clusters[f] = clusters[f] ?? new Set();
-  clusters[t] = clusters[t] ?? new Set();
-  clusters[f].add(t);
-  clusters[t].add(f);
+  let [f, _, t] = sortedByDist[i];
+  uf.union(f, t);
 }
 
-let cc = [];
-let visited = new Set();
-for (let k of Object.keys(clusters)) {
-  if (!visited.has(k)) {
-    cc.push(connect(Number(k), visited));
-  }
-}
+let cc = uf.allSizes();
+cc = Object.keys(cc).map((item) => cc[item]);
 
-function connect(k, visited) {
-  let q = [k];
-  let total = 0;
-  visited.add(k);
-
-  while (q.length) {
-    let k = q.shift();
-    total += 1;
-    for (let ch of clusters[k].values()) {
-      if (visited.has(ch)) continue;
-      visited.add(ch);
-      q.push(ch);
-    }
-  }
-
-  return total;
-}
 
 console.log(
   cc

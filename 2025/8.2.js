@@ -1,3 +1,5 @@
+import { UF } from "../utils/uf.js";
+
 let data = `162,817,812
 57,618,57
 906,360,560
@@ -25,8 +27,8 @@ function getDist(p1, p2) {
   return Math.floor(
     Math.sqrt(
       Math.pow(p1[0] - p2[0], 2) +
-        Math.pow(p1[1] - p2[1], 2) +
-        Math.pow(p1[2] - p2[2], 2),
+      Math.pow(p1[1] - p2[1], 2) +
+      Math.pow(p1[2] - p2[2], 2),
     ),
   );
 }
@@ -48,46 +50,21 @@ for (let i = 0; i < data.length; i++) {
   }
 }
 
-let notConnected = new Set(data.map((item) => item.join(",")));
 let sortedByDist = dists.toSorted((a, b) => a[1] - b[1]);
-
-let clusterKeys = new Set();
-let clusters = {};
-let clusterId = 1;
+let notConnected = new Set(data.map((item) => item.join(",")));
+let uf = new UF();
 
 let i = 0;
 while (i < sortedByDist.length) {
   let [f, _, t] = sortedByDist[i];
   i++;
 
-  let fid = clusters[f];
-  let tid = clusters[t];
-
-  if (fid && tid && fid === tid) {
-    continue;
-  } else if (fid && tid) {
-    // Path compress
-    clusterKeys.delete(tid);
-    for (let key of Object.keys(clusters)) {
-      if (clusters[key] === tid) {
-        clusters[key] = fid;
-      }
-    }
-  } else if (fid && !tid) {
-    clusters[t] = fid;
-  } else if (!fid && tid) {
-    clusters[f] = tid;
-  } else {
-    clusters[f] = clusterId;
-    clusters[t] = clusterId;
-    clusterKeys.add(clusterId);
-    clusterId++;
-  }
+  uf.union(f, t);
 
   notConnected.delete(data[f].join(","));
   notConnected.delete(data[t].join(","));
 
-  if (notConnected.size === 0 && clusterKeys.size === 1) {
+  if (notConnected.size === 0 && uf.count() === 1) {
     console.log("Last", f, t, data[f][0] * data[t][0]);
     break;
   }
